@@ -1,58 +1,125 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>IP Info App</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <style>
-        #map {
-            height: 300px;
-            margin-top: 20px;
-            border-radius: 8px;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>IP Info App</title>
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <!-- Leaflet CSS (maps) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    /* small inline map style in case static/style.css doesn't include it yet */
+    #map {
+      height: 300px;
+      margin-top: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.12);
+    }
+    .error-box {
+      background:#ffe6e6;
+      border:1px solid #ffb3b3;
+      padding:10px;
+      border-radius:6px;
+      color:#b00000;
+      margin-bottom:12px;
+    }
+    .center {
+      text-align:center;
+      margin-top:12px;
+    }
+    button#refreshBtn {
+      padding:8px 12px;
+      border-radius:6px;
+      border:1px solid #ccc;
+      cursor:pointer;
+      background:#f7f7f7;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>📡 Public IP Address Information</h2>
-        <table>
-            {% for key, value in ip_info.items() %}
-            <tr>
-                <th>{{ key }}</th>
-                <td>{{ value }}</td>
-            </tr>
-            {% endfor %}
-        </table>
+  <div class="container">
+    <h2>📡 Public IP Address Information</h2>
 
-        <h3>🌍 Location on Map</h3>
-        <div id="map"></div>
-    </div>
+    <!-- If the backend returned an error, show it -->
+    {% if ip_info and ip_info.get('Error') %}
+      <div class="error-box">
+        <strong>Error:</strong> {{ ip_info.get('Error') }}
+      </div>
+    {% else %}
+      <!-- Show info table -->
+      <table>
+        {% for key, value in ip_info.items() %}
+          <tr>
+            <th>{{ key }}</th>
+            <td>{{ value }}</td>
+          </tr>
+        {% endfor %}
+      </table>
 
-    <script>
-        // Get latitude and longitude from Python
-        {% if ip_info['IP Address'] and ip_info['Country'] %}
-        var loc = "{{ ip_info.get('Location', '') }}";
-        {% endif %}
+      <h3>🌍 Location on Map</h3>
 
-        {% if ip_info.get('City') and ip_info.get('Region') %}
-        var coords = "{{ ip_info.get('City') }}, {{ ip_info.get('Region') }}";
-        {% endif %}
+      {# Determine the location string safely; if missing, loc_value will be empty #}
+      {% set loc_value = ip_info.get('Location') if ip_info else '' %}
 
-        var latlng = "{{ ip_info.get('Location', '0,0') }}".split(",");
-        var map = L.map('map').setView([latlng[0], latlng[1]], 10);
+      {% if loc_value %}
+        <div id="map" aria-label="IP location map"></div>
+      {% else %}
+        <p>No location coordinates available to show on the map.</p>
+      {% endif %}
 
-        // Add OSM tile layer
+      <div class="center">
+        <button id="refreshBtn" type="button">Refresh</button>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Leaflet JS (load before using it) -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    // Refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => location.reload());
+    }
+
+    // Get the location string from Jinja safely (always becomes a JS string)
+    const loc = {{ (loc_value or '') | tojson }};
+
+    // Only init map if we have a non-empty location
+    if (loc && loc.length) {
+      // Expect "lat,lon"
+      const parts = loc.split(',').map(Number);
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+        const lat = parts[0];
+        const lon = parts[1];
+
+        // Create map
+        const map = L.map('map').setView([lat, lon], 10);
+
+        // OSM tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+          attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Add a marker at the location
-        L.marker([latlng[0], latlng[1]])
-            .addTo(map)
-            .bindPopup("You are here 📍")
-            .openPopup();
-    </script>
+        // Marker
+        L.marker([lat, lon]).addTo(map)
+          .bindPopup("Estimated location based on IP")
+          .openPopup();
+      } else {
+        console.warn('Invalid coordinates from backend:', loc);
+        // hide map container if coords invalid
+        const el = document.getElementById('map');
+        if (el) el.style.display = 'none';
+      }
+    } else {
+      // no coords: hide map div to avoid Leaflet errors
+      const el = document.getElementById('map');
+      if (el) el.style.display = 'none';
+    }
+  </script>
 </body>
 </html>
