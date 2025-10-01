@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <title>IP Info App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        #map {
+            height: 300px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -16,6 +25,34 @@
             </tr>
             {% endfor %}
         </table>
+
+        <h3>🌍 Location on Map</h3>
+        <div id="map"></div>
     </div>
+
+    <script>
+        // Get latitude and longitude from Python
+        {% if ip_info['IP Address'] and ip_info['Country'] %}
+        var loc = "{{ ip_info.get('Location', '') }}";
+        {% endif %}
+
+        {% if ip_info.get('City') and ip_info.get('Region') %}
+        var coords = "{{ ip_info.get('City') }}, {{ ip_info.get('Region') }}";
+        {% endif %}
+
+        var latlng = "{{ ip_info.get('Location', '0,0') }}".split(",");
+        var map = L.map('map').setView([latlng[0], latlng[1]], 10);
+
+        // Add OSM tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Add a marker at the location
+        L.marker([latlng[0], latlng[1]])
+            .addTo(map)
+            .bindPopup("You are here 📍")
+            .openPopup();
+    </script>
 </body>
 </html>
