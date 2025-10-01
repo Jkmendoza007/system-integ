@@ -1,16 +1,18 @@
+from flask import Flask, render_template
 import requests
 import pycountry
 
+app = Flask(__name__)
+
 def get_ip_info():
-    # Using ipapi.co as an example public API
-    api_url = "https://ipinfo.io/json/"
+    api_url = "https://ipinfo.io/json"  # Using IPinfo public API
     
     try:
         response = requests.get(api_url, timeout=5)
-        response.raise_for_status()  # Raise exception for HTTP errors
+        response.raise_for_status()
         data = response.json()
         
-        # Extract important info
+        # Resolve country name
         country_code = data.get("country")
         country_name = country_code
         if country_code:
@@ -21,7 +23,7 @@ def get_ip_info():
                 country_name = country_code
 
         ip_info = {
-            "IPv4/IPv6 Address": data.get("ip"),
+            "IP Address": data.get("ip"),
             "Version": "IPv6" if ":" in data.get("ip", "") else "IPv4",
             "City": data.get("city"),
             "Region": data.get("region"),
@@ -29,23 +31,15 @@ def get_ip_info():
             "Country Code": country_code,
             "ISP": data.get("org"),
             "ASN": data.get("asn")
-
         }
-        
         return ip_info
-    
     except requests.exceptions.RequestException as e:
-        print(f"Error retrieving IP info: {e}")
-        return None
+        return {"Error": str(e)}
 
-def display_ip_info(ip_info):
-    if ip_info:
-        print("\n📡 Public IP Address Information\n" + "-"*40)
-        for key, value in ip_info.items():
-            print(f"{key}: {value}")
-    else:
-        print("No IP information available.")
+@app.route("/")
+def home():
+    ip_info = get_ip_info()
+    return render_template("index.html", ip_info=ip_info)
 
 if __name__ == "__main__":
-    ip_info = get_ip_info()
-    display_ip_info(ip_info)
+    app.run(debug=True)
