@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Track - Network Information Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .banner {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .banner h1 {
+            font-size: 3em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .banner p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .refresh-btn:active {
+            transform: translateY(0);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .ip-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .version-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+
+        .version-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .ipv4-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .ipv6-icon {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .source-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .source-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .source-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .source-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ip-address {
+            font-size: 1.4em;
+            color: #667eea;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateX(3px);
+        }
+
+        .info-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 1.05em;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .not-available {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-radius: 15px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .error {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 20px;
+            border-radius: 12px;
+            color: #856404;
+            margin: 20px 0;
+        }
+
+        .map-container {
+            margin-top: 15px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+        }
+
+        .map-container h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .coordinates {
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .api-icon {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 768px) {
+            .banner h1 {
+                font-size: 2em;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .source-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="banner">
+            <h1>🌐 IP Track</h1>
+            <p>Advanced Network Information Dashboard - Multi-Source API Integration</p>
+            <button class="refresh-btn" onclick="loadIPInfo()">🔄 Refresh Information</button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Fetching IP information from multiple sources...</p>
+        </div>
+
+        <div id="content"></div>
+    </div>
+
+    <script>
+        async function loadIPInfo() {
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('content');
+            
+            loading.style.display = 'block';
+            content.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/ip-info');
+                const data = await response.json();
+
+                loading.style.display = 'none';
+
+                let html = '';
+
+                // IPv4 Section
+                html += '<div class="ip-section">';
+                html += '<div class="version-title">';
+                html += '<div class="version-icon ipv4-icon">v4</div>';
+                html += '<span>IPv4 Information</span>';
+                html += '</div>';
+
+                if (data.ipv4 && data.ipv4.length > 0) {
+                    data.ipv4.forEach((source, index) => {
+                        html += `
+                            <div class="source-card">
+                                <div class="source-header">
+                                    <div>
+                                        <div class="source-badge">
+                                            <span class="api-icon"></span>
+                                            Source: ${source.source}
+                                        </div>
+                                    </div>
+                                    <div class="ip-address">${source.ip || 'N/A'}</div>
+                                </div>
+                                <div class="info-grid">
+                        `;
+
+                        if (source.version) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">IP Version</div>
+                                    <div class="info-value">${source.version}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.country) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">Country</div>
+                                    <div class="info-value">${source.country} ${source.country_code ? '(' + source.country_code + ')' : ''}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.city) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">City</div>
+                                    <div class="info-value">${source.city}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.region) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">Region</div>
+                                    <div class="info-value">${source.region}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.isp) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">ISP / Organization</div>
+                                    <div class="info-value">${source.isp}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.asn) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">ASN</div>
+                                    <div class="info-value">${source.asn}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.timezone) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">Timezone</div>
+                                    <div class="info-value">${source.timezone}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.postal) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">Postal Code</div>
+                                    <div class="info-value">${source.postal}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.hostname) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">Hostname</div>
+                                    <div class="info-value">${source.hostname}</div>
+                                </div>
+                            `;
+                        }
+
+                        html += '</div>'; // Close info-grid
+
+                        if (source.latitude && source.longitude) {
+                            html += `
+                                <div class="map-container">
+                                    <h4>📍 Geolocation</h4>
+                                    <div class="coordinates">
+                                        Latitude: ${source.latitude}° | Longitude: ${source.longitude}°
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        html += '</div>'; // Close source-card
+                    });
+                } else {
+                    html += '<div class="not-available">IPv4 information not available</div>';
+                }
+
+                html += '</div>'; // Close ip-section
+
+                // IPv6 Section
+                html += '<div class="ip-section">';
+                html += '<div class="version-title">';
+                html += '<div class="version-icon ipv6-icon">v6</div>';
+                html += '<span>IPv6 Information</span>';
+                html += '</div>';
+
+                if (data.ipv6 && data.ipv6.length > 0) {
+                    data.ipv6.forEach((source, index) => {
+                        html += `
+                            <div class="source-card">
+                                <div class="source-header">
+                                    <div>
+                                        <div class="source-badge">
+                                            <span class="api-icon"></span>
+                                            Source: ${source.source}
+                                        </div>
+                                    </div>
+                                    <div class="ip-address">${source.ip || 'N/A'}</div>
+                                </div>
+                                <div class="info-grid">
+                        `;
+
+                        if (source.version) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">IP Version</div>
+                                    <div class="info-value">${source.version}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.country) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">Country</div>
+                                    <div class="info-value">${source.country} ${source.country_code ? '(' + source.country_code + ')' : ''}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.city) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">City</div>
+                                    <div class="info-value">${source.city}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.region) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">Region</div>
+                                    <div class="info-value">${source.region}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.isp) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">ISP / Organization</div>
+                                    <div class="info-value">${source.isp}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.asn) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">ASN</div>
+                                    <div class="info-value">${source.asn}</div>
+                                </div>
+                            `;
+                        }
+
+                        if (source.hostname) {
+                            html += `
+                                <div class="info-item">
+                                    <div class="info-label">Hostname</div>
+                                    <div class="info-value">${source.hostname}</div>
+                                </div>
+                            `;
+                        }
+
+                        html += '</div>'; // Close info-grid
+
+                        if (source.note) {
+                            html += `
+                                <div class="not-available" style="margin-top: 15px;">
+                                    Note: ${source.note}
+                                </div>
+                            `;
+                        }
+
+                        html += '</div>'; // Close source-card
+                    });
+                } else {
+                    html += `
+                        <div class="not-available">
+                            IPv6 address not available. Your network may not support IPv6, or you may be behind a NAT that only provides IPv4 connectivity.
+                        </div>
+                    `;
+                }
+
+                html += '</div>'; // Close ip-section
+
+                content.innerHTML = html;
+
+            } catch (error) {
+                loading.style.display = 'none';
+                content.innerHTML = `
+                    <div class="error">
+                        <strong>Error:</strong> Unable to fetch IP information. Please check your connection and try again.
+                        <br><br>
+                        <small>Error details: ${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        // Load information on page load
+        window.onload = loadIPInfo;
+    </script>
+</body>
+</html>
