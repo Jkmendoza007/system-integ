@@ -87,7 +87,7 @@
     }
 
     // Get the location string from Jinja safely (always becomes a JS string)
-    const loc = {{ (loc_value or '') | tojson }};
+    const loc = "{{ loc_value or '' }}";
 
     // Only init map if we have a non-empty location
     if (loc && loc.length) {
