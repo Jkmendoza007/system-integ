@@ -34,3 +34,10 @@ th {
     background: #f7f7f7;
     width: 40%;
 }
+
+#map {
+    height: 300px;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
+}
