@@ -5,14 +5,14 @@ import pycountry
 app = Flask(__name__)
 
 def get_ip_info():
-    api_url = "https://openstreetmap.org/json"  # Using IPinfo public API
+    api_url = "https://ipinfo.io/json"  # Correct API for IP details
     
     try:
         response = requests.get(api_url, timeout=5)
         response.raise_for_status()
         data = response.json()
-        
-        # Resolve country name
+
+        # Resolve country name from country code
         country_code = data.get("country")
         country_name = country_code
         if country_code:
@@ -30,7 +30,8 @@ def get_ip_info():
             "Country": country_name,
             "Country Code": country_code,
             "ISP": data.get("org"),
-            "ASN": data.get("asn")
+            "ASN": data.get("asn"),
+            "Location": data.get("loc")  # lat,long for OSM map
         }
         return ip_info
     except requests.exceptions.RequestException as e:
