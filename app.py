@@ -5,7 +5,7 @@ import pycountry
 app = Flask(__name__)
 
 def get_ip_info():
-    api_url = "https://ipinfo.io/json"  # Using IPinfo public API
+    api_url = "https://openstreetmap.org/json"  # Using IPinfo public API
     
     try:
         response = requests.get(api_url, timeout=5)
