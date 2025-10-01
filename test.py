@@ -1,4 +1,5 @@
 import requests
+import pycountry
 
 def get_ip_info():
     # Using ipapi.co as an example public API
@@ -10,15 +11,25 @@ def get_ip_info():
         data = response.json()
         
         # Extract important info
+        country_code = data.get("country")
+        country_name = country_code
+        if country_code:
+            try:
+                country = pycountry.countries.get(alpha_2=country_code.upper())
+                country_name = country.name if country else country_code
+            except:
+                country_name = country_code
+
         ip_info = {
             "IPv4/IPv6 Address": data.get("ip"),
             "Version": "IPv6" if ":" in data.get("ip", "") else "IPv4",
             "City": data.get("city"),
             "Region": data.get("region"),
-            "Country": data.get("country_name"),
-            "Country Code": data.get("country_code"),
+            "Country": country_name,
+            "Country Code": country_code,
             "ISP": data.get("org"),
             "ASN": data.get("asn")
+
         }
         
         return ip_info
