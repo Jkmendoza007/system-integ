@@ -2,7 +2,7 @@ import requests
 
 def get_ip_info():
     # Using ipapi.co as an example public API
-    api_url = "https://ipapi.co/json/"
+    api_url = "https://ipinfo.io/json/"
     
     try:
         response = requests.get(api_url, timeout=5)
