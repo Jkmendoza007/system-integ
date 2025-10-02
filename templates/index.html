@@ -59,8 +59,6 @@
         {% endfor %}
       </table>
 
-      <h3>🌍 Location on Map</h3>
-
       {# Determine the location string safely; if missing, loc_value will be empty #}
       {% set loc_value = ip_info.get('Location') if ip_info else '' %}
 
