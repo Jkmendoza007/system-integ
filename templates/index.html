@@ -85,41 +85,46 @@
       </div>
     {% else %}
       <div class="error-container">
-        <div class="error-icon">⚠️</div>
+        <div class="error-icon">!</div>
         <h3>Unable to Retrieve Information</h3>
         <p>{{ result.error }}</p>
       </div>
     {% endif %}
   </div>
 
+  {% if result.success and result.data.location %}
   <script>
-    {% if result.success and result.data.location %}
-    const location = "{{ result.data.location }}";
-    if (location) {
-      const [lat, lng] = location.split(',').map(Number);
-      if (!isNaN(lat) && !isNaN(lng)) {
-        const map = L.map('map').setView([lat, lng], 11);
+    (function() {
+      const location = "{{ result.data.location }}";
+      if (location) {
+        const parts = location.split(',');
+        const lat = parseFloat(parts[0]);
+        const lng = parseFloat(parts[1]);
         
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          subdomains: 'abcd',
-          maxZoom: 19
-        }).addTo(map);
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const map = L.map('map').setView([lat, lng], 11);
+          
+          L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            subdomains: 'abcd',
+            maxZoom: 19
+          }).addTo(map);
 
-        const customIcon = L.divIcon({
-          className: 'custom-marker',
-          html: '<div class="marker-pulse"></div>',
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
-        });
+          const customIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div class="marker-pulse"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          });
 
-        L.marker([lat, lng], { icon: customIcon })
-          .addTo(map)
-          .bindPopup(`<strong>Estimated Location</strong><br>${lat.toFixed(4)}, ${lng.toFixed(4)}`)
-          .openPopup();
+          L.marker([lat, lng], { icon: customIcon })
+            .addTo(map)
+            .bindPopup('<strong>Estimated Location</strong><br>' + lat.toFixed(4) + ', ' + lng.toFixed(4))
+            .openPopup();
+        }
       }
-    }
-    {% endif %}
+    })();
   </script>
+  {% endif %}
 </body>
 </html>
