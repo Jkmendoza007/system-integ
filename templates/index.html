@@ -2,68 +2,124 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NETrieve – IP Info</title>
-
-  <!-- Styles -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NETrieve — Network Intelligence</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
+  <div class="background-grid"></div>
+  
   <div class="container">
-    <h2>NETrieve 🌐</h2>
+    <header class="header">
+      <div class="header-accent"></div>
+      <h1 class="title">NETrieve</h1>
+      <p class="subtitle">Network Intelligence Dashboard</p>
+    </header>
 
-    {% if ip_info and ip_info.get('Error') %}
-      <div class="error-box">
-        <strong>Error:</strong> {{ ip_info.get('Error') }}
+    {% if result.success %}
+      <div class="content-grid">
+        <!-- Main Info Card -->
+        <div class="card card-primary">
+          <div class="card-header">
+            <span class="card-icon">🌐</span>
+            <h3>Connection Details</h3>
+          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">IP Address</span>
+              <span class="value ip-address">{{ result.data.ip }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Protocol</span>
+              <span class="value protocol-badge">{{ result.data.version }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">ISP</span>
+              <span class="value">{{ result.data.isp }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Timezone</span>
+              <span class="value">{{ result.data.timezone }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location Card -->
+        <div class="card card-secondary">
+          <div class="card-header">
+            <span class="card-icon">📍</span>
+            <h3>Geographic Location</h3>
+          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Country</span>
+              <span class="value">{{ result.data.country }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Region</span>
+              <span class="value">{{ result.data.region }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">City</span>
+              <span class="value">{{ result.data.city }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Postal Code</span>
+              <span class="value">{{ result.data.postal }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map Card -->
+        {% if result.data.location %}
+        <div class="card card-map">
+          <div class="card-header">
+            <span class="card-icon">🗺️</span>
+            <h3>Location Map</h3>
+          </div>
+          <div id="map"></div>
+        </div>
+        {% endif %}
       </div>
     {% else %}
-      <table>
-        {% for key, value in ip_info.items() %}
-          <tr>
-            <th>{{ key }}</th>
-            <td>{{ value }}</td>
-          </tr>
-        {% endfor %}
-      </table>
-
-      {% set loc_value = ip_info.get('Location') if ip_info else '' %}
-      {% if loc_value %}
-        <div id="map"></div>
-      {% else %}
-        <p>No location coordinates available to show on the map.</p>
-      {% endif %}
-
-      <div class="center">
-        <button id="refreshBtn">🔄 Refresh Info</button>
+      <div class="error-container">
+        <div class="error-icon">⚠️</div>
+        <h3>Unable to Retrieve Information</h3>
+        <p>{{ result.error }}</p>
       </div>
     {% endif %}
   </div>
 
   <script>
-    // Refresh button
-    const refreshBtn = document.getElementById('refreshBtn');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => location.reload());
-    }
-
-    // Handle location map
-    const loc = "{{ loc_value or '' }}";
-    if (loc && loc.length) {
-      const parts = loc.split(',').map(Number);
-      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-        const map = L.map('map').setView([parts[0], parts[1]], 10);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> contributors'
+    {% if result.success and result.data.location %}
+    const location = "{{ result.data.location }}";
+    if (location) {
+      const [lat, lng] = location.split(',').map(Number);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        const map = L.map('map').setView([lat, lng], 11);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          subdomains: 'abcd',
+          maxZoom: 19
         }).addTo(map);
-        L.marker([parts[0], parts[1]]).addTo(map)
-          .bindPopup("📍 Estimated location based on IP")
+
+        const customIcon = L.divIcon({
+          className: 'custom-marker',
+          html: '<div class="marker-pulse"></div>',
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
+
+        L.marker([lat, lng], { icon: customIcon })
+          .addTo(map)
+          .bindPopup(`<strong>Estimated Location</strong><br>${lat.toFixed(4)}, ${lng.toFixed(4)}`)
           .openPopup();
       }
     }
+    {% endif %}
   </script>
 </body>
 </html>
