@@ -455,3 +455,8 @@ body {
   margin: 12px;
   font-size: 0.9rem;
 }
+
+.speed-btn {
+  background: linear-gradient(135deg, var(--monokai-blue), var(--monokai-purple));
+  background: linear-gradient(135deg, var(--monokai-cyan), var(--monokai-purple));
+}
