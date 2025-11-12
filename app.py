@@ -63,19 +63,21 @@ def get_ip_info(ip):
         logging.error(f"Error fetching IP info: {str(e)}")
         return {"success": False, "error": f"Unable to fetch IP information: {str(e)}"}
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home():
-    """Main route to display visitor IP information"""
-    visitor_ip = get_client_ip()
-    result = get_ip_info(visitor_ip)
-    return render_template("index.html", result=result, current_ip=visitor_ip)
+    """Show visitor IP info or lookup a user-specified IP"""
+    ip_input = request.args.get("ip")  # user-entered IP
+    ip = ip_input if ip_input else get_client_ip()  # fallback to visitor IP
+    result = get_ip_info(ip)
+    return render_template("index.html", result=result, current_ip=ip_input or "")
 
 @app.route("/api/refresh")
 def refresh():
-    """API endpoint to refresh visitor IP information"""
-    visitor_ip = get_client_ip()
+    """API endpoint to refresh IP information"""
+    ip_input = request.args.get("ip")
+    ip = ip_input if ip_input else get_client_ip()
     get_ip_info.cache_clear()
-    result = get_ip_info(visitor_ip)
+    result = get_ip_info(ip)
     return jsonify(result)
 
 if __name__ == "__main__":
