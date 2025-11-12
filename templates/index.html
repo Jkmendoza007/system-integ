@@ -12,10 +12,14 @@
   <div class="background-grid"></div>
   
   <div class="container">
-    <header class="header"> 
+    <header class="header">
       <div class="header-accent"></div>
       <h1 class="title">NETrieve</h1>
       <p class="subtitle">POWERED BY ONIC PH</p>
+      <form class="ip-form" method="GET" action="/">
+        <input type="text" name="ip" placeholder="Enter IP address (e.g., 8.8.8.8)" value="{{ current_ip or '' }}" class="ip-input">
+        <button type="submit" class="submit-btn">Lookup</button>
+      </form>
     </header>
 
     {% if result.success %}

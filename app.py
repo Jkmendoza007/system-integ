@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import requests
 import pycountry
 from functools import lru_cache
@@ -7,10 +7,10 @@ import logging
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
-@lru_cache(maxsize=1)
-def get_ip_info():
+@lru_cache(maxsize=None)
+def get_ip_info(ip=None):
     """Fetch IP information with caching and error handling"""
-    api_url = "https://ipinfo.io/json"
+    api_url = f"https://ipinfo.io/{ip}/json" if ip else "https://ipinfo.io/json"
     
     try:
         response = requests.get(api_url, timeout=10)
@@ -58,14 +58,16 @@ def get_ip_info():
 @app.route("/")
 def home():
     """Main route to display IP information"""
-    result = get_ip_info()
-    return render_template("index.html", result=result)
+    ip = request.args.get('ip')
+    result = get_ip_info(ip)
+    return render_template("index.html", result=result, current_ip=ip)
 
 @app.route("/api/refresh")
 def refresh():
     """API endpoint to refresh IP information"""
+    ip = request.args.get('ip')
     get_ip_info.cache_clear()
-    result = get_ip_info()
+    result = get_ip_info(ip)
     return jsonify(result)
 
 if __name__ == "__main__":

@@ -106,6 +106,60 @@ body {
   font-weight: 500;
 }
 
+/* IP Input Form */
+.ip-form {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  align-items: center;
+}
+
+.ip-input {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--glass-light);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--monokai-white);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.ip-input::placeholder {
+  color: rgba(248, 248, 242, 0.5);
+}
+
+.ip-input:focus {
+  border-color: var(--monokai-cyan);
+  box-shadow: 0 0 0 2px rgba(102, 217, 239, 0.2);
+}
+
+.submit-btn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--monokai-pink), var(--monokai-purple));
+  border: none;
+  border-radius: 8px;
+  color: var(--monokai-white);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, var(--monokai-purple), var(--monokai-pink));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 38, 114, 0.3);
+}
+
+.submit-btn:active {
+  transform: translateY(0);
+}
+
 /* Content grid */
 .content-grid {
   padding: 30px;
@@ -285,20 +339,29 @@ body {
   .title {
     font-size: 2rem;
   }
-  
+
+  .ip-form {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .ip-input {
+    width: 100%;
+  }
+
   .content-grid {
     padding: 20px;
     grid-template-columns: 1fr;
   }
-  
+
   .card-primary {
     grid-column: span 1;
   }
-  
+
   .info-grid {
     grid-template-columns: 1fr;
   }
-  
+
   #map {
     height: 250px;
   }
