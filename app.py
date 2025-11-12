@@ -1,7 +1,6 @@
 from flask import Flask, render_template, jsonify, request, send_file
 import requests
 import pycountry
-from functools import lru_cache
 import logging
 import csv
 import io
@@ -13,36 +12,27 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
 def get_client_ip():
-    """Get the real visitor IP, accounting for reverse proxy headers."""
+    """Get visitor IP, accounting for reverse proxies."""
     xff = request.headers.get("X-Forwarded-For", "")
     if xff:
-        # X-Forwarded-For can contain multiple IPs, take the first one
-        ip = xff.split(",")[0].strip()
-    else:
-        ip = request.remote_addr
-    return ip
+        return xff.split(",")[0].strip()
+    return request.remote_addr
 
-@lru_cache(maxsize=128)  # cache per IP
 def get_ip_info(ip):
-    """Fetch IP information for a given IP with caching and error handling"""
+    """Fetch IP info from ipinfo.io for a given IP"""
     api_url = f"https://ipinfo.io/{ip}/json"
-    
     try:
         response = requests.get(api_url, timeout=10)
         response.raise_for_status()
         data = response.json()
 
-        # Resolve country name from country code
         country_code = data.get("country")
         country_name = country_code
         if country_code:
-            try:
-                country = pycountry.countries.get(alpha_2=country_code.upper())
-                country_name = country.name if country else country_code
-            except (KeyError, AttributeError):
-                country_name = country_code
+            country = pycountry.countries.get(alpha_2=country_code.upper())
+            if country:
+                country_name = country.name
 
-        # Determine IP version
         ip_version = "IPv6" if ":" in ip else "IPv4"
 
         ip_info = {
@@ -57,31 +47,28 @@ def get_ip_info(ip):
             "timezone": data.get("timezone", "N/A"),
             "postal": data.get("postal", "N/A")
         }
-        
         return {"success": True, "data": ip_info}
-    
-    except requests.exceptions.Timeout:
-        logging.error("Request timeout while fetching IP info")
-        return {"success": False, "error": "Request timed out. Please try again."}
-    
     except requests.exceptions.RequestException as e:
         logging.error(f"Error fetching IP info: {str(e)}")
-        return {"success": False, "error": f"Unable to fetch IP information: {str(e)}"}
+        return {"success": False, "error": str(e)}
 
 @app.route("/", methods=["GET"])
 def home():
-    """Show visitor IP info or lookup a user-specified IP"""
-    ip_input = request.args.get("ip")  # user-entered IP
-    ip = ip_input if ip_input else get_client_ip()  # fallback to visitor IP
+    """Show visitor IP or lookup another IP"""
+    ip_input = request.args.get("ip")
+    if ip_input:
+        ip = ip_input.strip()
+    else:
+        ip = get_client_ip()
+
     result = get_ip_info(ip)
     return render_template("index.html", result=result, current_ip=ip_input or "")
 
 @app.route("/api/refresh")
 def refresh():
-    """API endpoint to refresh IP information"""
+    """Refresh IP info"""
     ip_input = request.args.get("ip")
-    ip = ip_input if ip_input else get_client_ip()
-    get_ip_info.cache_clear()
+    ip = ip_input.strip() if ip_input else get_client_ip()
     result = get_ip_info(ip)
     return jsonify(result)
 
