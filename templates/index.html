@@ -33,7 +33,14 @@
           <div class="info-grid">
             <div class="info-item">
               <span class="label">IP Address</span>
-              <span class="value ip-address">{{ result.data.ip }}</span>
+              <div class="ip-container">
+                <span class="value ip-address" id="ip-address">{{ result.data.ip }}</span>
+                <button class="copy-btn" onclick="copyToClipboard()" title="Copy IP Address">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6.01 5.9 6.01 7L6 21C6 22.1 6.89 23 7.99 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             <div class="info-item">
               <span class="label">Protocol</span>
@@ -96,6 +103,51 @@
     {% endif %}
   </div>
 
+  <script>
+    let copyTimeout;
+
+    async function copyToClipboard() {
+      const ipAddress = document.getElementById('ip-address').textContent;
+      const btn = event.target;
+
+      // Clear any existing timeout
+      if (copyTimeout) {
+        clearTimeout(copyTimeout);
+      }
+
+      try {
+        await navigator.clipboard.writeText(ipAddress);
+        // Visual feedback
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/></svg>';
+        btn.style.color = 'var(--monokai-green)';
+        copyTimeout = setTimeout(() => {
+          btn.innerHTML = originalHTML;
+          btn.style.color = '';
+          copyTimeout = null;
+        }, 1000);
+      } catch (err) {
+        console.error('Failed to copy: ', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = ipAddress;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="currentColor"/></svg>';
+        btn.style.color = 'var(--monokai-green)';
+        copyTimeout = setTimeout(() => {
+          btn.innerHTML = originalHTML;
+          btn.style.color = '';
+          copyTimeout = null;
+        }, 1000);
+      }
+    }
+  </script>
+
   {% if result.success and result.data.location %}
   <script>
     (function() {
@@ -104,10 +156,10 @@
         const parts = location.split(',');
         const lat = parseFloat(parts[0]);
         const lng = parseFloat(parts[1]);
-        
+
         if (!isNaN(lat) && !isNaN(lng)) {
           const map = L.map('map').setView([lat, lng], 11);
-          
+
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
             maxZoom: 19
