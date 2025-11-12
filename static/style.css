@@ -149,6 +149,10 @@ body {
   background: linear-gradient(135deg, var(--monokai-pink), var(--monokai-purple));
 }
 
+.speed-btn {
+  background: linear-gradient(135deg, var(--monokai-blue), var(--monokai-purple));
+}
+
 .export-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
