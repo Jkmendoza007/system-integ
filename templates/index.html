@@ -20,6 +20,13 @@
         <input type="text" name="ip" placeholder="Enter IP address (e.g., 8.8.8.8)" value="{{ current_ip or '' }}" class="ip-input">
         <button type="submit" class="submit-btn">Lookup</button>
       </form>
+      {% if result.success %}
+      <div class="export-buttons">
+        <a href="/export/csv?ip={{ current_ip or '' }}" class="export-btn csv-btn">Export CSV</a>
+        <a href="/export/excel?ip={{ current_ip or '' }}" class="export-btn excel-btn">Export Excel</a>
+        <a href="/export/pdf?ip={{ current_ip or '' }}" class="export-btn pdf-btn">Export PDF</a>
+      </div>
+      {% endif %}
     </header>
 
     {% if result.success %}

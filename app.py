@@ -1,8 +1,13 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_file
 import requests
 import pycountry
 from functools import lru_cache
 import logging
+import csv
+import io
+from openpyxl import Workbook
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -79,6 +84,66 @@ def refresh():
     get_ip_info.cache_clear()
     result = get_ip_info(ip)
     return jsonify(result)
+
+@app.route("/export/csv")
+def export_csv():
+    """Export IP information as CSV"""
+    ip_input = request.args.get("ip")
+    ip = ip_input if ip_input else get_client_ip()
+    result = get_ip_info(ip)
+    if not result["success"]:
+        return jsonify(result), 400
+
+    data = result["data"]
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Field", "Value"])
+    for key, value in data.items():
+        writer.writerow([key, value])
+    output.seek(0)
+    return send_file(io.BytesIO(output.getvalue().encode('utf-8')), mimetype='text/csv', as_attachment=True, download_name='ip_info.csv')
+
+@app.route("/export/excel")
+def export_excel():
+    """Export IP information as Excel"""
+    ip_input = request.args.get("ip")
+    ip = ip_input if ip_input else get_client_ip()
+    result = get_ip_info(ip)
+    if not result["success"]:
+        return jsonify(result), 400
+
+    data = result["data"]
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "IP Information"
+    ws.append(["Field", "Value"])
+    for key, value in data.items():
+        ws.append([key, value])
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='ip_info.xlsx')
+
+@app.route("/export/pdf")
+def export_pdf():
+    """Export IP information as PDF"""
+    ip_input = request.args.get("ip")
+    ip = ip_input if ip_input else get_client_ip()
+    result = get_ip_info(ip)
+    if not result["success"]:
+        return jsonify(result), 400
+
+    data = result["data"]
+    output = io.BytesIO()
+    c = canvas.Canvas(output, pagesize=letter)
+    c.drawString(100, 750, "IP Information Report")
+    y = 720
+    for key, value in data.items():
+        c.drawString(100, y, f"{key}: {value}")
+        y -= 20
+    c.save()
+    output.seek(0)
+    return send_file(output, mimetype='application/pdf', as_attachment=True, download_name='ip_info.pdf')
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
