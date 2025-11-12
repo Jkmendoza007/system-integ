@@ -1,3 +1,4 @@
-Flask==2.3.3
-requests==2.32.0
-pycountry==22.3.5
+Flask==3.0.0
+requests==2.31.0
+pycountry==23.12.11
+user-agents==2.2.0

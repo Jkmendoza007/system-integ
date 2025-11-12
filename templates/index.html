@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NETrieve — Network Intelligence</title>
+  <title>NETrieve – Network Intelligence</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -16,10 +16,6 @@
       <div class="header-accent"></div>
       <h1 class="title">NETrieve</h1>
       <p class="subtitle">POWERED BY ONIC PH</p>
-      <form class="ip-form" method="GET" action="/">
-        <input type="text" name="ip" placeholder="Enter IP address (e.g., 8.8.8.8)" value="{{ current_ip or '' }}" class="ip-input">
-        <button type="submit" class="submit-btn">Lookup</button>
-      </form>
     </header>
 
     {% if result.success %}
@@ -86,10 +82,44 @@
           <div id="map"></div>
         </div>
         {% endif %}
+
+        <!-- Browser & Device Info Card -->
+        {% if browser_result.success %}
+        <div class="card card-map">
+          <div class="card-header">
+            <span class="card-icon">💻</span>
+            <h3>Browser & Device Information</h3>
+          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Browser</span>
+              <span class="value">{{ browser_result.data.browser_name }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Browser Version</span>
+              <span class="value">{{ browser_result.data.browser_version }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Operating System</span>
+              <span class="value">{{ browser_result.data.os_full }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Device Type</span>
+              <span class="value">{{ browser_result.data.device_type }}</span>
+            </div>
+          </div>
+          <div class="user-agent-section">
+            <div class="info-item">
+              <span class="label">Raw User Agent</span>
+              <span class="value user-agent-text">{{ browser_result.data.raw_user_agent }}</span>
+            </div>
+          </div>
+        </div>
+        {% endif %}
       </div>
     {% else %}
       <div class="error-container">
-        <div class="error-icon">!</div>
+        <div class="error-icon">⚠️</div>
         <h3>Unable to Retrieve Information</h3>
         <p>{{ result.error }}</p>
       </div>

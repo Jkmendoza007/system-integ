@@ -3,24 +3,15 @@ import requests
 import pycountry
 from functools import lru_cache
 import logging
+from browser_info import get_browser_info
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
 
-def get_client_ip():
-    """Get the real visitor IP, accounting for reverse proxy headers."""
-    xff = request.headers.get("X-Forwarded-For", "")
-    if xff:
-        # X-Forwarded-For can contain multiple IPs, take the first one
-        ip = xff.split(",")[0].strip()
-    else:
-        ip = request.remote_addr
-    return ip
-
-@lru_cache(maxsize=128)  # cache per IP
-def get_ip_info(ip):
-    """Fetch IP information for a given IP with caching and error handling"""
-    api_url = f"https://ipinfo.io/{ip}/json"
+@lru_cache(maxsize=1)
+def get_ip_info():
+    """Fetch IP information with caching and error handling"""
+    api_url = "https://ipinfo.io/json"
     
     try:
         response = requests.get(api_url, timeout=10)
@@ -30,6 +21,7 @@ def get_ip_info(ip):
         # Resolve country name from country code
         country_code = data.get("country")
         country_name = country_code
+        
         if country_code:
             try:
                 country = pycountry.countries.get(alpha_2=country_code.upper())
@@ -38,10 +30,11 @@ def get_ip_info(ip):
                 country_name = country_code
 
         # Determine IP version
-        ip_version = "IPv6" if ":" in ip else "IPv4"
+        ip_address = data.get("ip", "")
+        ip_version = "IPv6" if ":" in ip_address else "IPv4"
 
         ip_info = {
-            "ip": ip,
+            "ip": ip_address,
             "version": ip_version,
             "city": data.get("city", "N/A"),
             "region": data.get("region", "N/A"),
@@ -63,22 +56,31 @@ def get_ip_info(ip):
         logging.error(f"Error fetching IP info: {str(e)}")
         return {"success": False, "error": f"Unable to fetch IP information: {str(e)}"}
 
-@app.route("/", methods=["GET"])
+@app.route("/")
 def home():
-    """Show visitor IP info or lookup a user-specified IP"""
-    ip_input = request.args.get("ip")  # user-entered IP
-    ip = ip_input if ip_input else get_client_ip()  # fallback to visitor IP
-    result = get_ip_info(ip)
-    return render_template("index.html", result=result, current_ip=ip_input or "")
+    """Main route to display IP information"""
+    result = get_ip_info()
+    
+    # Get browser and device information from request headers
+    user_agent = request.headers.get('User-Agent', '')
+    browser_result = get_browser_info(user_agent)
+    
+    return render_template("index.html", result=result, browser_result=browser_result)
 
 @app.route("/api/refresh")
 def refresh():
     """API endpoint to refresh IP information"""
-    ip_input = request.args.get("ip")
-    ip = ip_input if ip_input else get_client_ip()
     get_ip_info.cache_clear()
-    result = get_ip_info(ip)
-    return jsonify(result)
+    result = get_ip_info()
+    
+    # Get browser info
+    user_agent = request.headers.get('User-Agent', '')
+    browser_result = get_browser_info(user_agent)
+    
+    return jsonify({
+        "ip_info": result,
+        "browser_info": browser_result
+    })
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
