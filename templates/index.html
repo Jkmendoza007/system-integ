@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 s<!doctype html>
 <html lang="en">
@@ -700,3 +701,145 @@ s<!doctype html>
 </body>
 </html>
 >>>>>>> parent of 2de828d (speed)
+=======
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NETrieve — Network Intelligence</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+  <div class="background-grid"></div>
+  
+  <div class="container">
+    <header class="header">
+      <div class="header-accent"></div>
+      <h1 class="title">NETrieve</h1>
+      <p class="subtitle">POWERED BY ONIC PH</p>
+      <form class="ip-form" method="GET" action="/">
+        <input type="text" name="ip" placeholder="Enter IP address (e.g., 8.8.8.8)" value="{{ current_ip or '' }}" class="ip-input">
+        <button type="submit" class="submit-btn">Lookup</button>
+      </form>
+      {% if result.success %}
+      <div class="export-buttons">
+        <a href="/export/csv?ip={{ current_ip or '' }}" class="export-btn csv-btn">Export CSV</a>
+        <a href="/export/excel?ip={{ current_ip or '' }}" class="export-btn excel-btn">Export Excel</a>
+        <a href="/export/pdf?ip={{ current_ip or '' }}" class="export-btn pdf-btn">Export PDF</a>
+      </div>
+      {% endif %}
+    </header>
+
+    {% if result.success %}
+      <div class="content-grid">
+        <!-- Main Info Card -->
+        <div class="card card-primary">
+          <div class="card-header">
+            <span class="card-icon">🌐</span>
+            <h3>Connection Details</h3>
+          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">IP Address</span>
+              <span class="value ip-address">{{ result.data.ip }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Protocol</span>
+              <span class="value protocol-badge">{{ result.data.version }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">ISP</span>
+              <span class="value">{{ result.data.isp }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Timezone</span>
+              <span class="value">{{ result.data.timezone }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location Card -->
+        <div class="card card-secondary">
+          <div class="card-header">
+            <span class="card-icon">📍</span>
+            <h3>Geographic Location</h3>
+          </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Country</span>
+              <span class="value">{{ result.data.country }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Region</span>
+              <span class="value">{{ result.data.region }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">City</span>
+              <span class="value">{{ result.data.city }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Postal Code</span>
+              <span class="value">{{ result.data.postal }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map Card -->
+        {% if result.data.location %}
+        <div class="card card-map">
+          <div class="card-header">
+            <span class="card-icon">🗺️</span>
+            <h3>Location Map</h3>
+          </div>
+          <div id="map"></div>
+        </div>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="error-container">
+        <div class="error-icon">!</div>
+        <h3>Unable to Retrieve Information</h3>
+        <p>{{ result.error }}</p>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if result.success and result.data.location %}
+  <script>
+    (function() {
+      const location = "{{ result.data.location }}";
+      if (location) {
+        const parts = location.split(',');
+        const lat = parseFloat(parts[0]);
+        const lng = parseFloat(parts[1]);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const map = L.map('map').setView([lat, lng], 11);
+          
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+          }).addTo(map);
+
+          const customIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div class="marker-pulse"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+          });
+
+          L.marker([lat, lng], { icon: customIcon })
+            .addTo(map)
+            .bindPopup('<strong>Estimated Location</strong><br>' + lat.toFixed(4) + ', ' + lng.toFixed(4))
+            .openPopup();
+        }
+      }
+    })();
+  </script>
+  {% endif %}
+</body>
+</html>
+>>>>>>> parent of 0b81b17 (Merge branch 'main' of https://github.com/Jkmendoza007/system-integ)
