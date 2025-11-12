@@ -24,13 +24,13 @@ body {
   background: linear-gradient(135deg, var(--monokai-dark) 0%, #131410 100%);
   color: var(--monokai-white);
   min-height: 100vh;
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
   position: relative;
   overflow-x: hidden;
+  height: 100%;
 }
 
 /* Animated background grid */
