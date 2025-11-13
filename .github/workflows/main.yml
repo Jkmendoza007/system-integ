@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger update script on PythonAnywhere
+      - name: Trigger update.sh on PythonAnywhere
         run: |
           curl -X POST https://www.pythonanywhere.com/api/v0/user/netrieve/bash/ \
           -H "Authorization: Token ${{ secrets.PYTHONANYWHERE_TOKEN }}" \
