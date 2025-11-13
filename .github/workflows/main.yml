@@ -3,14 +3,15 @@ name: Deploy to PythonAnywhere
 on:
   push:
     branches:
-      - main  # deploy whenever you push to main
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Notify PythonAnywhere to reload app
+      - name: Trigger update script on PythonAnywhere
         run: |
-          curl -X POST https://www.pythonanywhere.com/api/v0/user/netrieve/webapps/netrieve.pythonanywhere.com/reload/ \
-          -H "Authorization: Token ${{ secrets.PYTHONANYWHERE_TOKEN }}"
+          curl -X POST https://www.pythonanywhere.com/api/v0/user/yourusername/bash/ \
+          -H "Authorization: Token ${{ secrets.PYTHONANYWHERE_TOKEN }}" \
+          -d 'source ~/system-integ/update.sh'
