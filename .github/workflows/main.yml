@@ -1,0 +1,17 @@
+name: Deploy to PythonAnywhere
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger update script on PythonAnywhere
+        run: |
+          curl -X POST https://www.pythonanywhere.com/api/v0/user/yourusername/bash/ \
+          -H "Authorization: Token ${{ secrets.PYTHONANYWHERE_TOKEN }}" \
+          -d 'source ~/system-integ/update.sh'
