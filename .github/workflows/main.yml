@@ -1,0 +1,16 @@
+name: Deploy to PythonAnywhere
+
+on:
+  push:
+    branches:
+      - main  # deploy whenever you push to main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Notify PythonAnywhere to reload app
+        run: |
+          curl -X POST https://www.pythonanywhere.com/api/v0/user/netrieve/webapps/netrieve.pythonanywhere.com/reload/ \
+          -H "Authorization: Token ${{ secrets.PYTHONANYWHERE_TOKEN }}"
