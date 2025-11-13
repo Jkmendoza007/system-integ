@@ -10,8 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Notify start
+        run: echo "GitHub Actions workflow started at $(date)"
+
       - name: Trigger update.sh on PythonAnywhere
         run: |
-          curl -X POST https://www.pythonanywhere.com/api/v0/user/netrieve/bash/ \
+          echo "Sending POST request to PythonAnywhere API..."
+          curl -v -X POST https://www.pythonanywhere.com/api/v0/user/netrieve/bash/ \
           -H "Authorization: Token ${{ secrets.PYTHONANYWHERE_TOKEN }}" \
           -d 'source ~/system-integ/update.sh'
+
+      - name: Notify done
+        run: echo "GitHub Actions workflow finished at $(date)"
